@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="static/vue.js"></script>
+    <script src="static/jquery-3.1.1.js"></script>
+
+</head>
+<body>
+
+<div id="app">
+    <ul>
+        <li v-for="(todo, index) in todos">
+            {{ todo.text }} <button v-on:click="add(index)" > + </button> {{ todo.number }} <button v-on:click="minus(index)"> - </button>
+        </li>
+    </ul>
+    <button v-on:click="push">新增</button>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            todos: [
+
+            ]
+        },
+        methods:{
+            add: function (index) {
+                this.todos[index].number++
+            },
+            minus:function(index){
+                this.todos[index].number--
+            },
+            push: function () {
+//                this.todos.push({text: 'jwkuang', number: 0})
+                jQuery.ajax({
+                    type: "get",
+                    url: "hello",
+                    success: function (data, textStatus) {
+                        $$("#app").append(data)
+                    }
+                })
+            }
+        }
+    })
+</script>
+</body>
+</html>

@@ -11,26 +11,27 @@
 
 <div id="app">
     <ul>
-        <li v-for="(todo, index) in todos">
-            {{ todo.text }} <button v-on:click="add(index)" > + </button> {{ todo.number }} <button v-on:click="minus(index)"> - </button>
+        <li v-for="(todo, index) in students">
+            {{ todo.name }} <button v-on:click="add(index)" > + </button> {{ todo.count }} <button v-on:click="minus(index)"> - </button>
         </li>
     </ul>
     <button v-on:click="push">新增</button>
 </div>
 <script>
-    new Vue({
+    var vueObj = new Vue({
         el: '#app',
         data: {
-            todos: [
+            students: [
 
             ]
         },
+        time: 0,
         methods:{
             add: function (index) {
-                this.todos[index].number++
+                this.students[index].count++
             },
             minus:function(index){
-                this.todos[index].number--
+                this.students[index].count--
             },
             push: function () {
 //                this.todos.push({text: 'jwkuang', number: 0})
@@ -43,7 +44,19 @@
                 })
             }
         }
-    })
+    });
+
+    jQuery.ajax({
+        type: "get",
+        url: "getData",
+        success: function (data, textStatus) {
+            var jsonobj = eval('(' + data + ')');
+            vueObj.time = jsonobj.time;
+            for(var i=0;i<jsonobj.data.length;i++){
+                vueObj.students.push({name: jsonobj.data[i].name, count: jsonobj.data[i].count});
+            }
+        }
+    });
 </script>
 </body>
 </html>

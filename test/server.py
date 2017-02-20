@@ -37,12 +37,26 @@ class GetData:
         return fileObject.read()
 
 class AddCount:
-    def GET(self, name):
+    def GET(self, name, count):
         filename = getCurrentMonthFileName() + ".json"
         if os.path.isfile(filename):
-            fileObject = open(filename, mode='w+')
+            fileObject = open(filename, mode='r')
             jsonObj = json.loads(fileObject.read())
+            fileObject.close()
             data = jsonObj['data']
+            hasname = False
+            for tempdata in data:
+                print(cmp(tempdata['name'], name))
+                if cmp(tempdata['name'], name) == 0:
+                    tempdata['count'] += count
+                    tempdata['time'].append(getCurrentDayStr())
+                    hasname = True
+                    break
+            if not hasname:
+                data.append({'name': name, 'count': 1, 'time': [getCurrentDayStr()]})
+            fileObject = open(filename, mode='w+')
+            fileObject.write(json.dumps(jsonObj))
+            fileObject.close()
         else:
             newfile = open(filename, mode='w+')
             jsondict = {'time': getCurrentMonthFileName()}
@@ -59,6 +73,4 @@ class index:
         return hello()
 
 if __name__ == "__main__":
-    # app.run()
-    getdata = AddCount()
-    getdata.GET('kjw')
+    app.run()

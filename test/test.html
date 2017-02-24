@@ -1,23 +1,78 @@
 <!DOCTYPE html>
 <html lang="en" >
 <head>
+    <title>test</title>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel=stylesheet href="static/jquery.mobile-1.4.5.css">
     <script type="text/javascript" src="static/vue.js"></script>
-    <script src="static/jquery-3.1.1.js"></script>
+    <script src="static/jquery.js"></script>
+    <script src="static/jquery.mobile-1.4.5.js"></script>
 
 </head>
 <body>
+<div data-role="page" id="mainPage">
+    <div data-role="header" id="header">
+        <h1> {{headerTime}} </h1>
+    </div>
+    <div id="app" data-role="content">
+        <ol data-role="listview" data-inset="true">
+            <li v-for="(student, index) in students">
+                <div class="ui-grid-b" style="align-items:center">
+                    <div class="ui-block-a" style="font-size: 25px;width:30%;padding-left:5%;padding-top:5%;">
+                        {{ student.name }}
+                    </div>
+                    <div class="ui-block-b" style="height:30px;padding-top:5%">
+                        <button v-on:click="add(index)" > + </button>
+                        <div style="width:50px;display:inline-block;text-align:center;">{{ student.count }}</div>
+                        <button v-on:click="minus(index)"> - </button>
+                    </div>
+                    <div class="ui-block-c" style="height:30px;padding-top:5%">
+                        <a href="#deletePage" data-rel="dialog" v-on:click="deleteStudent(index)">删除</a>
+                    </div>
+                </div>
+            </li>
+        </ol>
+        <div id="addStudent" class="ui-grid-a" >
+            <div class="ui-block-a" style="width:70%;padding-left:2%">
+                <input type="text" name="addname" id="addname" style="height:50px;" placeholder="姓名...">
+            </div>
+            <div class="ui-block-b" style="width:30%;padding-left:5%">
+                <button v-on:click="push" style="height:50px">新增</button>
+            </div>
 
-<div id="app">
-    <ul>
-        <li v-for="(todo, index) in students">
-            {{ todo.name }} <button v-on:click="add(index)" > + </button> {{ todo.count }} <button v-on:click="minus(index)"> - </button>
-        </li>
-    </ul>
-    <button v-on:click="push">新增</button>
+        </div>
+    </div>
+</div>
+
+<div data-role="page" id="deletePage">
+    <div data-role="header">
+        <h1>是否删除</h1>
+    </div>
+    <div data-role="content">
+        <p id="deleteContent"></p>
+    </div>
+    <div class="ui-grid-a">
+        <div class="ui-block-a">
+            <a href="#mainPage" onclick="doDelete()" data-role="button">是</a>
+        </div>
+        <div class="ui-block-b">
+            <a href="#mainPage" data-role="button">否</a>
+        </div>
+    </div>
 </div>
 <script>
+    var isAddReturnFromServer = true;
+    var headerVue = new Vue({
+       el: '#header',
+        data: {
+           headerTime: '练琴记录表'
+        }
+    });
+    function sortStudent(a, b) {
+        return b.count - a.count;
+    }
     var vueObj = new Vue({
         el: '#app',
         data: {
@@ -28,35 +83,122 @@
         time: 0,
         methods:{
             add: function (index) {
-                this.students[index].count++
-            },
-            minus:function(index){
-                this.students[index].count--
-            },
-            push: function () {
-//                this.todos.push({text: 'jwkuang', number: 0})
+                if(!isAddReturnFromServer){
+                    alert("别点太快啦！");
+                    return;
+                }
+                isAddReturnFromServer = false;
+                this.students[index].count++;
                 jQuery.ajax({
                     type: "get",
-                    url: "hello",
+                    url: "add",
+                    data:{
+                        name: this.students[index].name,
+                        count: 1
+                    },
                     success: function (data, textStatus) {
-                        $$("#app").append(data)
+                        isAddReturnFromServer = true;
+                        if(data == '-1'){
+                            alert("参数错误！");
+                            return;
+                        }
+                        vueObj.students[index].count = parseInt(data);
+                        vueObj.students.sort(sortStudent);
+                    }
+                });
+            },
+            minus:function(index){
+                if(!isAddReturnFromServer){
+                    alert("别点太快啦！");
+                    return;
+                }
+                if(this.students[index].count == 1){
+                    alert("再减就没有啦");
+                    return;
+                }
+                isAddReturnFromServer = false;
+                this.students[index].count--
+                jQuery.ajax({
+                    type: "get",
+                    url: "add",
+                    data:{
+                        name: this.students[index].name,
+                        count: -1
+                    },
+                    success: function (data, textStatus) {
+                        isAddReturnFromServer = true;
+                        if(data == '-1'){
+                            alert("参数错误！");
+                            return;
+                        }
+                        vueObj.students[index].count = parseInt(data);
+                        vueObj.students.sort(sortStudent);
+                    }
+                });
+            },
+            push: function () {
+                var name = $$('#addname').val()
+                if(name.length == 0){
+                    alert("请输入学生名字");
+                    return
+                }
+                this.students.push({name: name, count: 1});
+                jQuery.ajax({
+                    type: "get",
+                    url: "add",
+                    data:{
+                        name: name,
+                        count: 1
+                    },
+
+                    success: function (data, textStatus) {
+                        if(data == 1){
+                            alert("添加成功！");
+                            $$("#addname").val("")
+                        }
                     }
                 })
+            },
+            deleteStudent: function (index) {
+                $$("#deleteContent").text(vueObj.students[index].name);
             }
         }
     });
+    function doDelete(){
+        jQuery.ajax({
+            type: "get",
+            url: "delete",
+            data: {
+                name: $$("#deleteContent").text()
+            },
+            success: function (data, textStatus) {
+                if(data != 1){
+                    alert(data);
+                }else{
+                    getData();
+                }
+            }
+        });
+        $$("#deleteContent").text();
+    }
 
-    jQuery.ajax({
-        type: "get",
-        url: "getData",
-        success: function (data, textStatus) {
-            var jsonobj = eval('(' + data + ')');
-            vueObj.time = jsonobj.time;
-            for(var i=0;i<jsonobj.data.length;i++){
-                vueObj.students.push({name: jsonobj.data[i].name, count: jsonobj.data[i].count});
+    function getData() {
+        jQuery.ajax({
+            type: "get",
+            url: "getData",
+            success: function (data, textStatus) {
+                var jsonobj = eval('(' + data + ')');
+                headerVue.headerTime = jsonobj.time;
+                vueObj.students = [];
+                for(var i=0;i<jsonobj.data.length;i++){
+                    vueObj.students.push({name: jsonobj.data[i].name, count: jsonobj.data[i].count});
+                }
+                vueObj.students.sort(sortStudent);
             }
-        }
-    });
+        });
+    }
+    getData();
+
 </script>
 </body>
 </html>

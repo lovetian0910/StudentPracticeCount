@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import web
 import json
 import time
@@ -5,8 +6,10 @@ import os
 
 urls = ("/index", "index",
         "/getData", "GetData",
-        "/add", "AddCount")
+        "/add", "AddCount",
+        "/delete", "DeleteStudent")
 app = web.application(urls, globals())
+
 
 def getCurrentMonthFileName():
     nowTime = time.localtime(time.time())
@@ -37,8 +40,12 @@ class GetData:
         return fileObject.read()
 
 class AddCount:
-    def GET(self, name, count):
+    def GET(self):
+        input = web.input()
+        name = input.name
+        count = input.count
         filename = getCurrentMonthFileName() + ".json"
+        finalCount = 0
         if os.path.isfile(filename):
             fileObject = open(filename, mode='r')
             jsonObj = json.loads(fileObject.read())
@@ -48,12 +55,19 @@ class AddCount:
             for tempdata in data:
                 print(cmp(tempdata['name'], name))
                 if cmp(tempdata['name'], name) == 0:
-                    tempdata['count'] += count
-                    tempdata['time'].append(getCurrentDayStr())
+                    if cmp(count, '1') == 0:
+                        tempdata['count'] += 1
+                    elif cmp(count, '-1') == 0:
+                        tempdata['count'] -= 1
+                    else:
+                        return -1
+                    # tempdata['time'].append(getCurrentDayStr())
                     hasname = True
+                    finalCount = tempdata['count']
                     break
             if not hasname:
                 data.append({'name': name, 'count': 1, 'time': [getCurrentDayStr()]})
+                finalCount = 1
             fileObject = open(filename, mode='w+')
             fileObject.write(json.dumps(jsonObj))
             fileObject.close()
@@ -65,12 +79,33 @@ class AddCount:
             outjson = json.dumps(jsondict)
             newfile.write(outjson)
             newfile.close()
-        return 1
+            finalCount = 1
+        return finalCount
+
+
+class DeleteStudent:
+    def GET(self):
+        input = web.input()
+        name = input.name
+        filename = getCurrentMonthFileName() + ".json"
+        fileObj = open(filename, mode='r')
+        jsonObj = json.loads(fileObj.read())
+        fileObj.close()
+        data = jsonObj['data']
+        for student in data:
+            if cmp(student['name'], name) == 0:
+                data.remove(student)
+                fileObject = open(filename, mode='w+')
+                fileObject.write(json.dumps(jsonObj))
+                fileObject.close()
+                return 1
+        return "没有该学生!"
 
 class index:
     def GET(self):
         hello = web.template.frender('test.html')
-        return hello()
+        result = hello()
+        return result
 
 if __name__ == "__main__":
     app.run()

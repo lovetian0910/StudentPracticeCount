@@ -23,12 +23,12 @@
                     <div class="ui-block-a" style="font-size: 25px;width:30%;padding-left:5%;padding-top:5%;">
                         {{ student.name }}
                     </div>
-                    <div class="ui-block-b" style="height:30px;padding-top:5%">
+                    <div class="ui-block-b" style="height:30px;padding-top:5%;width:50%">
                         <button v-on:click="add(index)" > + </button>
                         <div style="width:50px;display:inline-block;text-align:center;">{{ student.count }}</div>
                         <button v-on:click="minus(index)"> - </button>
                     </div>
-                    <div class="ui-block-c" style="height:30px;padding-top:5%">
+                    <div class="ui-block-c" style="height:30px;padding-top:5%;width:20%">
                         <a href="#deletePage" data-rel="dialog" v-on:click="deleteStudent(index)">删除</a>
                     </div>
                 </div>
